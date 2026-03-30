@@ -1,25 +1,11 @@
 ```
 # Build artifacts
-dist/
 build/
-
-# Compiled files
 *.pyc
 __pycache__/
 
-# Executables
-*.exe
-*.dll
-*.so
-*.a
-*.o
-*.obj
-*.out
-
-# Logs
+# Logs and temp files
 *.log
-
-# Temp files
 *.tmp
 
 # Environment
@@ -30,13 +16,8 @@ __pycache__/
 # Editors
 .vscode/
 .idea/
-*.swp
-*.swo
 
-# Dependencies
-.venv/
-venv/
-node_modules/
-.mypy_cache/
-.pytest_cache/
+# OS generated files
+.DS_Store
+Thumbs.db
 ```
