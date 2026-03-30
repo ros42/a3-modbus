@@ -1,0 +1,47 @@
+```
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Build artifacts
+build/
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# Editors
+.vscode/
+.idea/
+
+# Dependencies
+.venv/
+venv/
+node_modules/
+
+# Coverage
+.coverage
+coverage/
+htmlcov/
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# MyPy
+.mypy_cache/
+
+# PyTest
+.pytest_cache/
+```

@@ -1,0 +1,162 @@
+{
+    "app_name": "Servo Control App",
+    "version": "1.0.0",
+    "modbus_settings": {
+        "port": "/dev/ttyUSB0",
+        "baudrate": 9600,
+        "parity": "N",
+        "stopbits": 1,
+        "bytesize": 8,
+        "timeout": 1.0,
+        "slave_id": 1
+    },
+    "read_registers": {
+        "fast_group": {
+            "period_ms": 200,
+            "registers": [
+                {
+                    "name": "Motor_Speed",
+                    "address": 1000,
+                    "data_type": "int16",
+                    "scale": 1.0,
+                    "offset": 0.0
+                },
+                {
+                    "name": "Motor_Current",
+                    "address": 1001,
+                    "data_type": "uint16",
+                    "scale": 0.1,
+                    "offset": 0.0
+                }
+            ]
+        },
+        "slow_group": {
+            "period_ms": 1000,
+            "registers": [
+                {
+                    "name": "Motor_Temperature",
+                    "address": 1010,
+                    "data_type": "int16",
+                    "scale": 0.1,
+                    "offset": 0.0
+                },
+                {
+                    "name": "Motor_Voltage",
+                    "address": 1011,
+                    "data_type": "uint16",
+                    "scale": 0.1,
+                    "offset": 0.0
+                },
+                {
+                    "name": "Motor_Status",
+                    "address": 1020,
+                    "data_type": "uint32",
+                    "scale": 1.0,
+                    "offset": 0.0
+                }
+            ]
+        }
+    },
+    "write_registers": {
+        "conditions": [
+            {
+                "name": "Enable_Motor",
+                "register_address": 2000,
+                "write_value": 1,
+                "condition_type": "bit_true",
+                "source_register": "Motor_Status",
+                "bit_index": 0,
+                "description": "Включить мотор когда бит 0 установлен"
+            },
+            {
+                "name": "Disable_On_Overheat",
+                "register_address": 2000,
+                "write_value": 0,
+                "condition_type": "value_greater",
+                "source_register": "Motor_Temperature",
+                "threshold": 80.0,
+                "description": "Выключить мотор при перегреве > 80°C"
+            },
+            {
+                "name": "Set_Speed_Limit",
+                "register_address": 2001,
+                "write_value": 1500,
+                "condition_type": "value_less",
+                "source_register": "Motor_Speed",
+                "threshold": 100.0,
+                "description": "Установить ограничение скорости если < 100"
+            },
+            {
+                "name": "Reset_Error",
+                "register_address": 2002,
+                "write_value": 0,
+                "condition_type": "bit_false",
+                "source_register": "Motor_Status",
+                "bit_index": 7,
+                "description": "Сбросить ошибку когда бит 7 сброшен"
+            }
+        ]
+    },
+    "ui_layout": {
+        "widgets": [
+            {
+                "type": "gauge",
+                "register": "Motor_Speed",
+                "title": "Скорость мотора",
+                "min_value": -3000,
+                "max_value": 3000,
+                "unit": "RPM",
+                "position": {"row": 0, "column": 0}
+            },
+            {
+                "type": "gauge",
+                "register": "Motor_Current",
+                "title": "Ток мотора",
+                "min_value": 0,
+                "max_value": 100,
+                "unit": "A",
+                "position": {"row": 0, "column": 1}
+            },
+            {
+                "type": "numeric_display",
+                "register": "Motor_Temperature",
+                "title": "Температура",
+                "format": "{:.1f}",
+                "unit": "°C",
+                "position": {"row": 1, "column": 0}
+            },
+            {
+                "type": "numeric_display",
+                "register": "Motor_Voltage",
+                "title": "Напряжение",
+                "format": "{:.1f}",
+                "unit": "V",
+                "position": {"row": 1, "column": 1}
+            },
+            {
+                "type": "bit_indicator",
+                "register": "Motor_Status",
+                "title": "Статус мотора",
+                "bits": [
+                    {"index": 0, "label": "Motor Enabled", "color_on": "#00FF00", "color_off": "#FF0000"},
+                    {"index": 1, "label": "Fault Active", "color_on": "#FF0000", "color_off": "#00FF00"},
+                    {"index": 2, "label": "Ready", "color_on": "#00FF00", "color_off": "#808080"},
+                    {"index": 3, "label": "Warning", "color_on": "#FFFF00", "color_off": "#00FF00"}
+                ],
+                "position": {"row": 2, "column": 0, "colspan": 2}
+            },
+            {
+                "type": "hex_display",
+                "register": "Motor_Status",
+                "title": "Статус (HEX)",
+                "position": {"row": 3, "column": 0}
+            },
+            {
+                "type": "binary_display",
+                "register": "Motor_Status",
+                "title": "Статус (BIN)",
+                "position": {"row": 3, "column": 1}
+            }
+        ]
+    }
+}
