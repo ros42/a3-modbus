@@ -1,23 +1,41 @@
 ```
-# Build artifacts
-build/
-*.pyc
+# Python
 __pycache__/
-
-# Logs and temp files
-*.log
-*.tmp
-
-# Environment
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.ENV
 .env
-.env.local
-*.env.*
 
-# Editors
-.vscode/
-.idea/
+# Generated files
+dist/
+build/
+*.egg-info/
+
+# Logs
+*.log
 
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+
+# Coverage
+.coverage
+coverage/
+htmlcov/
+
+# Testing
+.pytest_cache/
+.mypy_cache/
 ```

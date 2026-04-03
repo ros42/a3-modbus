@@ -13,6 +13,7 @@ class ReadRegister:
     """Represents a register to be read from Modbus device"""
     name: str
     address: int
+    slave_id: int = 1
     data_type: str = "uint16"
     scale: float = 1.0
     offset: float = 0.0
@@ -44,32 +45,36 @@ class RegisterManager:
     
     def __init__(self):
         self.registers: Dict[str, ReadRegister] = {}
-        self.fast_group: List[str] = []  # Names of registers in fast group (200ms)
-        self.slow_group: List[str] = []  # Names of registers in slow group (1000ms)
+        self.slave_groups: Dict[int, List[str]] = {}  # slave_id -> list of register names
         self.write_conditions: List[WriteCondition] = []
+        self.memory_registers: Dict[str, Any] = {}  # Intermediate memory registers
     
-    def add_register(self, register: ReadRegister, group: str = "slow"):
+    def add_register(self, register: ReadRegister, slave_id: int = None):
         """
         Add a register to be monitored
         
         Args:
             register: ReadRegister object
-            group: Group name ('fast' for 200ms, 'slow' for 1000ms)
+            slave_id: Slave ID for this register (from register.slave_id if not specified)
         """
         self.registers[register.name] = register
         
-        if group.lower() == 'fast' or 'fast' in group.lower():
-            self.fast_group.append(register.name)
-        else:
-            self.slow_group.append(register.name)
+        # Use provided slave_id or from register
+        sid = slave_id if slave_id is not None else register.slave_id
+        
+        if sid not in self.slave_groups:
+            self.slave_groups[sid] = []
+        
+        if register.name not in self.slave_groups[sid]:
+            self.slave_groups[sid].append(register.name)
     
     def remove_register(self, name: str):
         """Remove a register by name"""
         if name in self.registers:
-            if name in self.fast_group:
-                self.fast_group.remove(name)
-            if name in self.slow_group:
-                self.slow_group.remove(name)
+            # Remove from all slave groups
+            for sid in self.slave_groups:
+                if name in self.slave_groups[sid]:
+                    self.slave_groups[sid].remove(name)
             del self.registers[name]
     
     def update_register_value(self, name: str, value: float):
@@ -95,15 +100,36 @@ class RegisterManager:
         values = {}
         for name, reg in self.registers.items():
             values[name] = reg.get_scaled_value()
+        # Include memory registers
+        values.update(self.memory_registers)
         return values
     
-    def get_fast_group_registers(self) -> List[ReadRegister]:
-        """Get all registers in the fast group"""
-        return [self.registers[name] for name in self.fast_group if name in self.registers]
+    def get_slave_group_registers(self, slave_id: int) -> List[ReadRegister]:
+        """Get all registers for a specific slave ID"""
+        if slave_id not in self.slave_groups:
+            return []
+        return [self.registers[name] for name in self.slave_groups[slave_id] if name in self.registers]
     
-    def get_slow_group_registers(self) -> List[ReadRegister]:
-        """Get all registers in the slow group"""
-        return [self.registers[name] for name in self.slow_group if name in self.registers]
+    def get_all_slave_ids(self) -> List[int]:
+        """Get list of all configured slave IDs"""
+        return list(self.slave_groups.keys())
+    
+    def add_memory_register(self, name: str, initial_value: Any = None):
+        """Add an intermediate memory register"""
+        self.memory_registers[name] = initial_value
+    
+    def update_memory_register(self, name: str, value: Any):
+        """Update a memory register value"""
+        self.memory_registers[name] = value
+    
+    def get_memory_register(self, name: str) -> Any:
+        """Get a memory register value"""
+        return self.memory_registers.get(name)
+    
+    def remove_memory_register(self, name: str):
+        """Remove a memory register"""
+        if name in self.memory_registers:
+            del self.memory_registers[name]
     
     def add_write_condition(self, condition: WriteCondition):
         """Add a write condition"""
@@ -175,15 +201,23 @@ class RegisterManager:
             return None
         
         reg = self.registers[name]
+        # Find which slave group this register belongs to
+        slave_id = None
+        for sid, names in self.slave_groups.items():
+            if name in names:
+                slave_id = sid
+                break
+        
         return {
             'name': reg.name,
             'address': reg.address,
+            'slave_id': reg.slave_id,
             'data_type': reg.data_type,
             'scale': reg.scale,
             'offset': reg.offset,
             'current_value': reg.get_scaled_value(),
             'raw_value': reg.value,
-            'group': 'fast' if name in self.fast_group else 'slow'
+            'slave_group': slave_id
         }
     
     def list_registers(self) -> List[Dict[str, Any]]:

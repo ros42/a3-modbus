@@ -97,14 +97,13 @@ class ConfigEditorApp:
             ("Stopbits:", "stopbits", 3),
             ("Bytesize:", "bytesize", 4),
             ("Timeout:", "timeout", 5),
-            ("Slave ID:", "slave_id", 6),
         ]
         
         self.modbus_vars = {}
         for i, (label, key, row) in enumerate(fields):
             ttk.Label(self.modbus_tab, text=label).grid(row=row, column=0, sticky=tk.W, pady=5)
             
-            if key in ["baudrate", "stopbits", "bytesize", "slave_id"]:
+            if key in ["baudrate", "stopbits", "bytesize"]:
                 var = tk.IntVar()
             elif key == "timeout":
                 var = tk.DoubleVar()
@@ -293,8 +292,7 @@ class ConfigEditorApp:
                 "parity": "N",
                 "stopbits": 1,
                 "bytesize": 8,
-                "timeout": 1.0,
-                "slave_id": 1
+                "timeout": 1.0
             },
             "read_registers": {
                 "fast_group": {
@@ -564,7 +562,7 @@ class RegisterDialog(tk.Toplevel):
     def __init__(self, parent, title, data=None):
         super().__init__(parent)
         self.title(title)
-        self.geometry("500x400")
+        self.geometry("500x450")
         self.resizable(True, True)
         
         self.result = None
@@ -573,6 +571,7 @@ class RegisterDialog(tk.Toplevel):
         fields = [
             ("Имя:", "name", tk.StringVar, data.get('name', '') if data else ''),
             ("Адрес:", "address", tk.IntVar, data.get('address', 0) if data else 0),
+            ("Slave ID:", "slave_id", tk.IntVar, data.get('slave_id', 1) if data else 1),
             ("Тип данных:", "data_type", tk.StringVar, data.get('data_type', 'uint16') if data else 'uint16'),
             ("Масштаб (scale):", "scale", tk.DoubleVar, data.get('scale', 1.0) if data else 1.0),
             ("Смещение (offset):", "offset", tk.DoubleVar, data.get('offset', 0.0) if data else 0.0),
@@ -592,7 +591,10 @@ class RegisterDialog(tk.Toplevel):
                     ttk.Entry(self, textvariable=var, width=40).grid(row=i, column=1, sticky=tk.W, pady=5)
             elif var_type == tk.IntVar:
                 var = tk.IntVar(value=default)
-                ttk.Spinbox(self, from_=0, to=65535, textvariable=var, width=37).grid(row=i, column=1, sticky=tk.W, pady=5)
+                if key == 'slave_id':
+                    ttk.Spinbox(self, from_=1, to=247, textvariable=var, width=37).grid(row=i, column=1, sticky=tk.W, pady=5)
+                else:
+                    ttk.Spinbox(self, from_=0, to=65535, textvariable=var, width=37).grid(row=i, column=1, sticky=tk.W, pady=5)
             else:  # DoubleVar
                 var = tk.DoubleVar(value=default)
                 ttk.Entry(self, textvariable=var, width=40).grid(row=i, column=1, sticky=tk.W, pady=5)
@@ -614,6 +616,7 @@ class RegisterDialog(tk.Toplevel):
             self.result = {
                 'name': self.vars['name'].get(),
                 'address': self.vars['address'].get(),
+                'slave_id': self.vars['slave_id'].get(),
                 'data_type': self.vars['data_type'].get(),
                 'scale': self.vars['scale'].get(),
                 'offset': self.vars['offset'].get()
