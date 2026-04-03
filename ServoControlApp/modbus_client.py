@@ -18,7 +18,6 @@ class ModbusSettings:
     stopbits: int = 1
     bytesize: int = 8
     timeout: float = 1.0
-    slave_id: int = 1
 
 
 class ModbusClient:
@@ -28,6 +27,11 @@ class ModbusClient:
         self.settings = settings
         self.client: Optional[ModbusSerialClient] = None
         self.connected = False
+        self.current_slave_id = 1  # Default slave ID
+    
+    def set_slave_id(self, slave_id: int):
+        """Set the current slave ID for subsequent operations"""
+        self.current_slave_id = slave_id
     
     def connect(self) -> bool:
         """Establish connection to Modbus device"""
@@ -80,7 +84,7 @@ class ModbusClient:
             else:
                 count = 1
             
-            result = self.client.read_holding_registers(address, count, slave=self.settings.slave_id)
+            result = self.client.read_holding_registers(address, count, slave=self.current_slave_id)
             
             if result.isError():
                 print(f"Error reading register {address}: {result}")
@@ -127,7 +131,7 @@ class ModbusClient:
             return False
         
         try:
-            result = self.client.write_register(address, value, slave=self.settings.slave_id)
+            result = self.client.write_register(address, value, slave=self.current_slave_id)
             
             if result.isError():
                 print(f"Error writing register {address}: {result}")
@@ -157,7 +161,7 @@ class ModbusClient:
             return False
         
         try:
-            result = self.client.write_registers(address, values, slave=self.settings.slave_id)
+            result = self.client.write_registers(address, values, slave=self.current_slave_id)
             
             if result.isError():
                 print(f"Error writing registers at {address}: {result}")
@@ -178,7 +182,7 @@ class ModbusClient:
             return None
         
         try:
-            result = self.client.read_coils(address, count, slave=self.settings.slave_id)
+            result = self.client.read_coils(address, count, slave=self.current_slave_id)
             
             if result.isError():
                 return None
@@ -195,7 +199,7 @@ class ModbusClient:
             return False
         
         try:
-            result = self.client.write_coil(address, value, slave=self.settings.slave_id)
+            result = self.client.write_coil(address, value, slave=self.current_slave_id)
             
             if result.isError():
                 return False

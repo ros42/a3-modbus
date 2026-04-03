@@ -41,7 +41,6 @@ class ModbusSettings:
     stopbits: int = 1
     bytesize: int = 8
     timeout: float = 1.0
-    slave_id: int = 1
 
 
 class ConfigLoader:
@@ -61,8 +60,7 @@ class ConfigLoader:
             parity=settings.get('parity', 'N'),
             stopbits=settings.get('stopbits', 1),
             bytesize=settings.get('bytesize', 8),
-            timeout=settings.get('timeout', 1.0),
-            slave_id=settings.get('slave_id', 1)
+            timeout=settings.get('timeout', 1.0)
         )
     
     @staticmethod
@@ -78,6 +76,7 @@ class ConfigLoader:
                 registers.append(ReadRegister(
                     name=reg['name'],
                     address=reg['address'],
+                    slave_id=reg.get('slave_id', 1),
                     data_type=reg.get('data_type', 'uint16'),
                     scale=reg.get('scale', 1.0),
                     offset=reg.get('offset', 0.0)
@@ -116,50 +115,43 @@ class WorkerThread(QThread):
     data_ready = pyqtSignal(dict)
     error_occurred = pyqtSignal(str)
     
-    def __init__(self, modbus_client: ModbusClient, register_manager: RegisterManager):
+    def __init__(self, modbus_client: ModbusClient, register_manager: RegisterManager, groups_config: Dict):
         super().__init__()
         self.modbus_client = modbus_client
         self.register_manager = register_manager
+        self.groups_config = groups_config  # {group_name: {'period_ms': int, 'registers': List[ReadRegister]}}
         self.running = False
-        self.fast_period_ms = 200
-        self.slow_period_ms = 1000
     
     def run(self):
         self.running = True
-        last_fast_time = time.time()
-        last_slow_time = time.time()
+        last_read_time = {group: 0.0 for group in self.groups_config}
         
         while self.running:
             current_time = time.time()
             
             try:
-                # Fast group reading
-                if (current_time - last_fast_time) * 1000 >= self.fast_period_ms:
-                    fast_regs = self.register_manager.get_fast_group_registers()
-                    for reg in fast_regs:
-                        value = self.modbus_client.read_register(reg.address, reg.data_type)
-                        if value is not None:
-                            scaled_value = value * reg.scale + reg.offset
-                            self.register_manager.update_register_value(reg.name, scaled_value)
+                # Read registers grouped by slave_id (no grouping logic - each slave independent)
+                for group_name, group_data in self.groups_config.items():
+                    period_ms = group_data.get('period_ms', 1000)
                     
-                    last_fast_time = current_time
-                
-                # Slow group reading
-                if (current_time - last_slow_time) * 1000 >= self.slow_period_ms:
-                    slow_regs = self.register_manager.get_slow_group_registers()
-                    for reg in slow_regs:
-                        value = self.modbus_client.read_register(reg.address, reg.data_type)
-                        if value is not None:
-                            scaled_value = value * reg.scale + reg.offset
-                            self.register_manager.update_register_value(reg.name, scaled_value)
-                    
-                    last_slow_time = current_time
+                    if (current_time - last_read_time[group_name]) * 1000 >= period_ms:
+                        for reg in group_data['registers']:
+                            # Set slave_id for this read operation
+                            self.modbus_client.set_slave_id(reg.slave_id)
+                            
+                            value = self.modbus_client.read_register(reg.address, reg.data_type)
+                            if value is not None:
+                                scaled_value = value * reg.scale + reg.offset
+                                self.register_manager.update_register_value(reg.name, scaled_value)
+                        
+                        last_read_time[group_name] = current_time
                 
                 # Check write conditions
                 all_values = self.register_manager.get_all_values()
                 write_ops = self.register_manager.check_write_conditions(all_values)
                 
                 for addr, value in write_ops:
+                    # Use slave_id from the first register or default to 1
                     success = self.modbus_client.write_register(addr, value)
                     if success:
                         print(f"Written {value} to register {addr}")
@@ -202,12 +194,6 @@ class SettingsDialog(QDialog):
         port_layout.addWidget(QLabel("Скорость:"), 1, 0)
         port_layout.addWidget(self.baudrate_combo, 1, 1)
         
-        self.slave_id_spin = QSpinBox()
-        self.slave_id_spin.setRange(1, 247)
-        self.slave_id_spin.setValue(settings.slave_id)
-        port_layout.addWidget(QLabel("Slave ID:"), 2, 0)
-        port_layout.addWidget(self.slave_id_spin, 2, 1)
-        
         port_group.setLayout(port_layout)
         layout.addWidget(port_group)
         
@@ -222,8 +208,7 @@ class SettingsDialog(QDialog):
     def get_settings(self) -> ModbusSettings:
         return ModbusSettings(
             port=self.port_edit.text(),
-            baudrate=int(self.baudrate_combo.currentText()),
-            slave_id=self.slave_id_spin.value()
+            baudrate=int(self.baudrate_combo.currentText())
         )
 
 
@@ -252,12 +237,16 @@ class MainWindow(QMainWindow):
         
         for group_name, group_data in groups.items():
             for reg in group_data['registers']:
-                self.register_manager.add_register(reg, group_name)
+                # Add register with its slave_id
+                self.register_manager.add_register(reg, reg.slave_id)
         
         # Add write conditions
         conditions = ConfigLoader.parse_write_conditions(self.config)
         for cond in conditions:
             self.register_manager.add_write_condition(cond)
+        
+        # Store groups config for worker thread
+        self.groups_config = groups
     
     def init_ui(self):
         """Initialize the user interface"""
@@ -360,7 +349,7 @@ class MainWindow(QMainWindow):
             # Connect
             try:
                 self.modbus_client.connect()
-                self.worker_thread = WorkerThread(self.modbus_client, self.register_manager)
+                self.worker_thread = WorkerThread(self.modbus_client, self.register_manager, self.groups_config)
                 self.worker_thread.data_ready.connect(self.update_ui)
                 self.worker_thread.error_occurred.connect(self.show_error)
                 self.worker_thread.start()
@@ -389,8 +378,7 @@ class MainWindow(QMainWindow):
             # Save to config
             self.config['modbus_settings'] = {
                 'port': self.settings.port,
-                'baudrate': self.settings.baudrate,
-                'slave_id': self.settings.slave_id
+                'baudrate': self.settings.baudrate
             }
             with open(self.config_path, 'w', encoding='utf-8') as f:
                 json.dump(self.config, f, indent=4, ensure_ascii=False)
