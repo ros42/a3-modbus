@@ -426,7 +426,7 @@ class ConfigEditorApp:
     def add_register(self, group):
         """Add a new register"""
         dialog = RegisterDialog(self.root, "Добавить регистр")
-        self.wait_window(dialog)  # Wait for dialog to close
+        self.root.wait_window(dialog)  # Wait for dialog to close
         if dialog.result:
             reg = dialog.result
             if group == 'fast':
@@ -452,7 +452,7 @@ class ConfigEditorApp:
         
         index = selection[0]
         dialog = RegisterDialog(self.root, "Редактировать регистр", regs[index])
-        self.wait_window(dialog)  # Wait for dialog to close
+        self.root.wait_window(dialog)  # Wait for dialog to close
         if dialog.result:
             regs[index] = dialog.result
             self.update_reg_listboxes()
@@ -489,7 +489,7 @@ class ConfigEditorApp:
     def add_condition(self):
         """Add a new write condition"""
         dialog = ConditionDialog(self.root, "Добавить условие")
-        self.wait_window(dialog)  # Wait for dialog to close
+        self.root.wait_window(dialog)  # Wait for dialog to close
         if dialog.result:
             self.write_conditions.append(dialog.result)
             self.update_conditions_listbox()
@@ -504,7 +504,7 @@ class ConfigEditorApp:
         
         index = selection[0]
         dialog = ConditionDialog(self.root, "Редактировать условие", self.write_conditions[index])
-        self.wait_window(dialog)  # Wait for dialog to close
+        self.root.wait_window(dialog)  # Wait for dialog to close
         if dialog.result:
             self.write_conditions[index] = dialog.result
             self.update_conditions_listbox()
@@ -536,7 +536,7 @@ class ConfigEditorApp:
     def add_widget(self):
         """Add a new UI widget"""
         dialog = WidgetDialog(self.root, "Добавить виджет")
-        self.wait_window(dialog)  # Wait for dialog to close
+        self.root.wait_window(dialog)  # Wait for dialog to close
         if dialog.result:
             self.ui_widgets.append(dialog.result)
             self.update_widgets_listbox()
@@ -551,7 +551,7 @@ class ConfigEditorApp:
         
         index = selection[0]
         dialog = WidgetDialog(self.root, "Редактировать виджет", self.ui_widgets[index])
-        self.wait_window(dialog)  # Wait for dialog to close
+        self.root.wait_window(dialog)  # Wait for dialog to close
         if dialog.result:
             self.ui_widgets[index] = dialog.result
             self.update_widgets_listbox()
