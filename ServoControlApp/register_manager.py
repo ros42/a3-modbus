@@ -15,15 +15,11 @@ class ReadRegister:
     address: int
     slave_id: int = 1
     data_type: str = "uint16"
-    scale: float = 1.0
-    offset: float = 0.0
     value: Optional[float] = None
     
-    def get_scaled_value(self) -> Optional[float]:
-        """Get the scaled and offset value"""
-        if self.value is None:
-            return None
-        return self.value * self.scale + self.offset
+    def get_value(self) -> Optional[float]:
+        """Get the register value"""
+        return self.value
 
 
 @dataclass
@@ -86,7 +82,7 @@ class RegisterManager:
         """Get the current value of a register"""
         if name in self.registers:
             reg = self.registers[name]
-            return reg.get_scaled_value()
+            return reg.get_value()
         return None
     
     def get_raw_register_value(self, name: str) -> Optional[float]:
@@ -99,7 +95,7 @@ class RegisterManager:
         """Get all register values as a dictionary"""
         values = {}
         for name, reg in self.registers.items():
-            values[name] = reg.get_scaled_value()
+            values[name] = reg.get_value()
         # Include memory registers
         values.update(self.memory_registers)
         return values
@@ -213,9 +209,7 @@ class RegisterManager:
             'address': reg.address,
             'slave_id': reg.slave_id,
             'data_type': reg.data_type,
-            'scale': reg.scale,
-            'offset': reg.offset,
-            'current_value': reg.get_scaled_value(),
+            'current_value': reg.get_value(),
             'raw_value': reg.value,
             'slave_group': slave_id
         }

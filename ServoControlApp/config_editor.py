@@ -573,8 +573,6 @@ class RegisterDialog(tk.Toplevel):
             ("Адрес:", "address", tk.IntVar, data.get('address', 0) if data else 0),
             ("Slave ID:", "slave_id", tk.IntVar, data.get('slave_id', 1) if data else 1),
             ("Тип данных:", "data_type", tk.StringVar, data.get('data_type', 'uint16') if data else 'uint16'),
-            ("Масштаб (scale):", "scale", tk.DoubleVar, data.get('scale', 1.0) if data else 1.0),
-            ("Смещение (offset):", "offset", tk.DoubleVar, data.get('offset', 0.0) if data else 0.0),
         ]
         
         self.vars = {}
@@ -617,9 +615,7 @@ class RegisterDialog(tk.Toplevel):
                 'name': self.vars['name'].get(),
                 'address': self.vars['address'].get(),
                 'slave_id': self.vars['slave_id'].get(),
-                'data_type': self.vars['data_type'].get(),
-                'scale': self.vars['scale'].get(),
-                'offset': self.vars['offset'].get()
+                'data_type': self.vars['data_type'].get()
             }
             self.destroy()
         except Exception as e:
