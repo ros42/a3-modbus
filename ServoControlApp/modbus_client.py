@@ -84,7 +84,7 @@ class ModbusClient:
             else:
                 count = 1
             
-            result = self.client.read_holding_registers(address, count, slave=self.current_slave_id)
+            result = self.client.read_holding_registers(address=address, count=count, slave=self.current_slave_id)
             
             if result.isError():
                 print(f"Error reading register {address}: {result}")
