@@ -434,6 +434,7 @@ class ConfigEditorApp:
             else:
                 self.slow_registers.append(reg)
             self.update_reg_listboxes()
+            self.update_json_view()
     
     def edit_register(self, group):
         """Edit selected register"""
@@ -455,6 +456,7 @@ class ConfigEditorApp:
         if dialog.result:
             regs[index] = dialog.result
             self.update_reg_listboxes()
+            self.update_json_view()
     
     def delete_register(self, group):
         """Delete selected register"""
@@ -474,6 +476,7 @@ class ConfigEditorApp:
             index = selection[0]
             regs.pop(index)
             self.update_reg_listboxes()
+            self.update_json_view()
     
     # Condition management methods
     def update_conditions_listbox(self):
@@ -490,6 +493,7 @@ class ConfigEditorApp:
         if dialog.result:
             self.write_conditions.append(dialog.result)
             self.update_conditions_listbox()
+            self.update_json_view()
     
     def edit_condition(self):
         """Edit selected condition"""
@@ -504,6 +508,7 @@ class ConfigEditorApp:
         if dialog.result:
             self.write_conditions[index] = dialog.result
             self.update_conditions_listbox()
+            self.update_json_view()
     
     def delete_condition(self):
         """Delete selected condition"""
@@ -516,6 +521,7 @@ class ConfigEditorApp:
             index = selection[0]
             self.write_conditions.pop(index)
             self.update_conditions_listbox()
+            self.update_json_view()
     
     # Widget management methods
     def update_widgets_listbox(self):
@@ -534,6 +540,7 @@ class ConfigEditorApp:
         if dialog.result:
             self.ui_widgets.append(dialog.result)
             self.update_widgets_listbox()
+            self.update_json_view()
     
     def edit_widget(self):
         """Edit selected widget"""
@@ -548,6 +555,7 @@ class ConfigEditorApp:
         if dialog.result:
             self.ui_widgets[index] = dialog.result
             self.update_widgets_listbox()
+            self.update_json_view()
     
     def delete_widget(self):
         """Delete selected widget"""
@@ -560,6 +568,7 @@ class ConfigEditorApp:
             index = selection[0]
             self.ui_widgets.pop(index)
             self.update_widgets_listbox()
+            self.update_json_view()
 
 
 class RegisterDialog(tk.Toplevel):
