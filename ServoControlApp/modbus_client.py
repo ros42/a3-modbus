@@ -98,13 +98,16 @@ class ModbusClient:
             elif data_type == 'int16':
                 return struct.unpack('>h', struct.pack('>H', registers[0]))[0]
             elif data_type == 'uint32':
-                value = (registers[0] << 16) | registers[1]
+                # Swap word order for Little Endian devices
+                value = (registers[1] << 16) | registers[0]
                 return value
             elif data_type == 'int32':
-                value = (registers[0] << 16) | registers[1]
+                # Swap word order for Little Endian devices
+                value = (registers[1] << 16) | registers[0]
                 return struct.unpack('>i', struct.pack('>I', value))[0]
             elif data_type == 'float32':
-                value = (registers[0] << 16) | registers[1]
+                # Swap word order for Little Endian devices
+                value = (registers[1] << 16) | registers[0]
                 return struct.unpack('>f', struct.pack('>I', value))[0]
             else:
                 return registers[0]
