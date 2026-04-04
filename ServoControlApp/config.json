@@ -17,17 +17,13 @@
                     "name": "Motor_Speed",
                     "address": 1000,
                     "slave_id": 1,
-                    "data_type": "int16",
-                    "scale": 1.0,
-                    "offset": 0.0
+                    "data_type": "int16"
                 },
                 {
                     "name": "Motor_Current",
                     "address": 1001,
                     "slave_id": 1,
-                    "data_type": "uint16",
-                    "scale": 0.1,
-                    "offset": 0.0
+                    "data_type": "uint16"
                 }
             ]
         },
@@ -38,25 +34,19 @@
                     "name": "Motor_Temperature",
                     "address": 1010,
                     "slave_id": 1,
-                    "data_type": "int16",
-                    "scale": 0.1,
-                    "offset": 0.0
+                    "data_type": "int16"
                 },
                 {
                     "name": "Motor_Voltage",
                     "address": 1011,
                     "slave_id": 1,
-                    "data_type": "uint16",
-                    "scale": 0.1,
-                    "offset": 0.0
+                    "data_type": "uint16"
                 },
                 {
                     "name": "Motor_Status",
                     "address": 1020,
                     "slave_id": 1,
-                    "data_type": "uint32",
-                    "scale": 1.0,
-                    "offset": 0.0
+                    "data_type": "uint32"
                 }
             ]
         }

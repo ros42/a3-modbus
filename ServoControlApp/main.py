@@ -77,9 +77,7 @@ class ConfigLoader:
                     name=reg['name'],
                     address=reg['address'],
                     slave_id=reg.get('slave_id', 1),
-                    data_type=reg.get('data_type', 'uint16'),
-                    scale=reg.get('scale', 1.0),
-                    offset=reg.get('offset', 0.0)
+                    data_type=reg.get('data_type', 'uint16')
                 ))
             
             groups[group_name] = {'period_ms': period_ms, 'registers': registers}
@@ -141,8 +139,7 @@ class WorkerThread(QThread):
                             
                             value = self.modbus_client.read_register(reg.address, reg.data_type)
                             if value is not None:
-                                scaled_value = value * reg.scale + reg.offset
-                                self.register_manager.update_register_value(reg.name, scaled_value)
+                                self.register_manager.update_register_value(reg.name, value)
                         
                         last_read_time[group_name] = current_time
                 
